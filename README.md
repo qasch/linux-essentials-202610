@@ -1,6 +1,6 @@
-# Lernziele
+# Linux Essentials
 
-In diesem Repo werden alle Übungen und die Dokumentation zu Kurs LF-ZQ7B Linux Essentials (19.10.2026-06.11.2026) bereitgestellt.
+In diesem Repo werden alle Übungen und die Dokumentation zum Kurs *LF-ZQ7B Linux Essentials* (19.10.2026-06.11.2026) bereitgestellt.
 
 ## Überblick über die Lernziele für das Linux Essentials Zertifikat
 
