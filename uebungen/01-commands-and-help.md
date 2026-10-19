@@ -66,11 +66,11 @@ ls /etc
 Erklärt, welche Wirkung die einzelnen Optionen haben:
 
 ```bash
-ls -lisahF
 ls -la
 ls -lh
 ls -ltr
 ls -alR
+ls -lisahF
 ```
 
 #### Transferaufgabe
