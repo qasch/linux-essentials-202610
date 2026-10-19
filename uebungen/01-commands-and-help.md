@@ -1,4 +1,4 @@
-# Überarbeitete Übungen zu Kommandos und Manpages
+# Übungen zu Kommandos und Manpages
 
 ## Hilfe auf der Kommandozeile
 
