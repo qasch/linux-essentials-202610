@@ -89,11 +89,109 @@ Eine Übersicht über alle Shell-Builtins können wir uns mit dem Kommando `help
 
 Die meisten Kommandos sind _extern realisiert_, d.h. sie sind nicht in die BASH eingebaut. So gut wie alle _extern realisierten_ Kommandos haben eine Manpage (`man <kommando>`) in welcher die Art wie das Kommando zu benutzen ist und sämtliche Optionen mit Erklärungen angegeben sind.
 
-TODO type
+#### Kommando `type`
+
+Mit dem Kommando `type` können wir herausfinden, ob ein Kommando extern realisiert, ein Builtin oder ein Alias ist:
+
+```bash
+type cd 
+> cd is a shell builtin
+
+type rm
+> rm is /usr/bin/rm
+
+type ls
+> ls is aliased to `ls --color=auto'
+```
 
 ## Dateioperationen
 
-TODO
+### Dateien erstellen mit `touch`
+
+Dateien können auf vielfältige Art und Weise erstellt werden. Ein einfacher Weg, leere Dateien zu erstellen, ist mit dem Kommando `touch`.
+```bash
+touch <name-der-datei>
+touch <name-der-datei-1> <name-der-datei-2> ...
+touch <pfad-zur-datei>
+```
+
+### Verzeichnisse erstellen mit `mkdir`
+
+Mit dem Kommando `mkdir` (*make directory*) können wir Verzeichnisse erstellen.
+```bash
+mkdir <name-des-verzeichnisses>
+mkdir <pfad-zum-verzeichniss>
+```
+
+Wollen wir eine komplette Verzeichnisstruktur erstellen, also mehere Verzeichnisebenen auf einmal, müssen wir `mkdir` die Option `-p` übergeben:
+
+```bash
+mkdir -p ~/Dir/SubDir/SubSubDir/SubSubSubDir
+```
+
+### Dateien/Verzeichnisse kopieren mit `cp`
+
+Dateien und Verzeichnisse können mit dem Kommando `cp` (*copy*) kopiert werden.
+
+```bash
+cp <quelle> <ziel>
+cp <pfad-zur-quelle> <pfad-zum-ziel>
+```
+
+**Vorsicht:** Wenn wir eine bestehende Datei als Ziel angeben, wird die Zieldatei **ohne Nachfrage** ersetzt/überschrieben und nicht etwas der Inhalt der Quelldatei an die Zieldatei angefügt oder eine Warnung angezeigt.
+
+Beim Kopieren von Verzeichnissen müssen wir an die Option `-r` (*rekursiv*) denken. 
+
+```bash
+cp -r <quellverzeichnis> <zielverzeichnis>
+```
+
+Der Grund ist, dass ein Verzeichnis nicht leer ist, die Kopieraktion also wiederholt/_rekursiv_ ausgeführt werden muss.
+
+> [!NOTE] 
+> Dies gilt übrigens für sehr viele Kommandos: funktioniert die Anwendung eines Kommandos auf eine Datei, nicht aber auf ein Verzeichnis, so fehlt oft einfach nur die Option `-r`.
+
+### Dateien/Verzeichnisse löschen mit `rm`
+
+Dateien und Verzeichnisse können mit dem Kommando `rm` (*remove*) gelöscht werden.
+
+Analog zum Kopieren von Verzeichnissen müssen wir auch beim Löschen von Verzeichnissen die Option `-r` angeben.
+
+```bash
+rm <pfad-zur-datei>
+rm -r <pfad-zum-verzeichniss>
+```
+
+>[!NOTE]
+> Wenn wir eine Datei löschen, so löschen wir nicht die Datei an sich. Wir entfernen lediglich den Dateinamen bzw. Pointer auf die Daten der Datei auf dem Speichermedium. Dieser Bereich im Speicher wird dann als wieder überschreibbar gemeldet.
+>
+> Die Daten könnten also solange keine weitere Schreiboperation auf diesen Speicherbereich erfolgt ist wiederhergestellt werden.
+
+### Leere Verzeichnisse löschen mit `rmdir`
+
+**Leere** Verzeichnisse können zusätzlich mit dem Kommando `rmdir` gelöscht werden.
+
+Nützlich, um z.B. nach einem Aufräumen sicher zu sein, nur leere Verzeichnisse zu löschen, z.B. mit `rmdir *`. So werden alle leeren Verzeichnisse gelöscht, Verzeichnisse mit Inhalt aber nicht und wir bekommen zusätzlich eine Liste aller Verzeichnisse mit Inhalt.
+
+### Dateien/Verzeichnisse verschieben/umbenennen mit `mv`
+
+Dateien und Verzeichnisse können mit dem Kommando `mv` (*move*) verschoben und umbenannt werden.
+
+Beim Verschieben von Verzeichnissen dürfen wir die Option `-r` *nicht* angeben. Der Grund dafür ist, dass beim Verschieben nicht wie vielleicht angenommen eine Art *ausschneiden* und *einfügen* stattfindet, sondern wie beim Löschen lediglich der Dateiname/Pfad ersetzt wird. 
+
+Es muss also keine rekursive Operation auf dem Speichermedium stattfinden. Das ist auf unten stehendender Illustration vielleicht besser zu erkennen.
+
+Ausnahme: Wird einen Datei auf eine andere Partition/Datenträger verschoben, so findet tatsächlich ein kopieren und anschlieẞdendes Löschen statt.
+
+```bash
+mv <quelle> <ziel>
+mv <quellverzeichnis> <zielverzeichnis>
+mv <alter-name> <neuer-name>
+```
+
+### Illustration kopieren, löschen, verschieben
+
+![illustration-cp-rm-mv](./images/cp-mv-rm.png)
 
 ## relative und absolute Pfadangaben
 
@@ -123,6 +221,41 @@ Eine *relative Pfadangabe* beschreibt den Weg ausgehend vom **aktuellen Standort
 ```bash
 cp somefile Somedir/
 ```
+
+TOD History
+
+## Pattern Matching / Globbing / Wildcards
+
+Ein *Pattern* ist ein *Muster*, bzw. ein *Platzhalter* oder *Wildcard* welches auf eine Zeichenfolge passt, so dass wir damit z.B. nach Dateien bzw. Pfadangaben suchen können (mit entsprechenden Kommandos) bzw. mehrere Dateien auf einmal ansprechen können.
+
+*Globbing Characters/Wildcard:*
+
+- `*` (*Asterisk*) -> Steht für beliebige Zeichen, welche beliebig oft vorkommen können (auch keinmal)
+- `?` -> Steht für jedes beliebige Zeichen, welches **exakt** einmal vorkommt
+- `[12]` Passt sowohl auf `1` als auch auf `2` (an dieser Stelle darf also **entweder** eine 1 oder eine 2 stehen.
+- `[A-D]` Passt auf `A`, `B`, `C` oder `D`
+- `[1-9]` Passt auf die Ziffern `1` bis `9`
+
+Weitere Möglichkeiten für Pattern Matching:
+
+- `[!pattern]` Exkludiert das angegebene Pattern (in dem Pattern dürfen auch wieder die oben angegebenen *Globbing Characters* vorkommen
+- `!(pattern)` Exkludiert das angegebene Pattern (in dem Pattern dürfen auch wieder die oben angegebenen *Globbing Characters* vorkommen
+
+Beispiele:
+```bash
+rm *.jpg       # löscht alle Dateien mit der Endung .jpg
+
+ls datei?.txt  # zeigt nur Dateien an, bei denen nach der Zeichenfolge datei noch ein weiteres beliebiges Zeichen folgt und die die Endung .txt haben
+
+mv !(o*) ../somdir/    # verschiebt alle Dateien des aktuellen Verzeichnisses nach ../somedir, ausser Dateien, die mit einem o beginnen
+
+mv [!o]* ../somdir/    # verschiebt alle Dateien des aktuellen Verzeichnisses nach ../somedir, ausser Dateien, die mit einem o beginnen
+```
+
+
+
+
+
 
 
 
