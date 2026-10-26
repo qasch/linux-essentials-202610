@@ -623,10 +623,158 @@ In der Regel erscheint die Ausgabe des Fehlerkanals vor der Ausgabe des Standard
 - Beide teilen sich denselben Schreibzeiger
 - Die Shell koordiniert die Schreibvorgänge, so dass es zu keinen Überschreibungen kommt
 
+#### Umleitung des Inhalts einer Datei an ein Kommando
+
+Wir können auch den Inhalt einer Datei in `stdin` umleiten mit einem "umgedrehten" Redirect `<`. 
+
+Das ist z.B. beim Kommando `tr` nötig, da `tr` keinen Dateinamen als Argument entgegennimmt:
+```bash
+# Ersetzung von , durch ;
+tr "," ";" < file.csv
+```
+
+>[!NOTE]
+> Obige Syntax führt nicht zu einer Ersetzung innerhalb der Datei, sondern erzeugt nur eine Ausgabe auf `stdout` mit den ersetzten Zeichen.
+
+```bash
+# Ersetzung von , durch ;, Erstellen einer Datei mit dem Ergebnis
+tr "," ";" < file.csv > file-new.csv
+```
+
+>[!NOTE]
+> Eine Ersetzung in der gleichen Datei ist so mit `tr` nicht möglich. Dazu könnte man andere Kommandos wie z.B. `sed` verwenden.
+
+#### Weitere Möglichkeiten für Umleitungen des Eingabekanals mit `<<` und `<<<`
+
+##### `<<` (Here-Document / Heredoc)
+
+Leitet mehrzeiligen Text als Eingabe an einen Befehl weiter, bis eine Endmarkierung erreicht wird.
+
+```bash
+cat << EOF
+Zeile 1
+Zeile 2
+EOF
+```
+
+- `EOF` ist frei wählbar (Konvention), muss am Anfang und Ende identisch sein
+- Variablen (`$VAR`) werden standardmäßig expandiert
+- Mit `<< 'EOF'` (Anführungszeichen um die Marke) wird keine Expansion durchgeführt – der Text bleibt "wörtlich"
+- `<<-` erlaubt zusätzlich führende Tabs vor der Endmarkierung (nicht Leerzeichen)
+
+##### `<<<` (Here-String)
+
+Leitet eine einzelne Zeile/einen einzelnen String als Eingabe weiter – kompakter als Heredoc für kurze Eingaben.
+
+```bash
+cat <<< "Hallo Welt"
+grep "Fehler" <<< "$log_variable"
+```
+
+Kurz gesagt: `<<` für mehrzeilige Textblöcke, `<<<` für einzelne Strings/Variablen.
+
+### Gerätedatei `/dev/null`
 
 
+`/dev/null` ist eine spezielle Gerätedatei (*Character Device*) unter Unix/Linux-Systemen, das alle Daten, die hineingeschrieben werden, sofort verwirft. Es wird oft als "Null-Gerät" oder als das "Schwarze Loch" eines Linux Systems bezeichent.
 
+#### Funktionsweise:
 
+Schreiben nach `/dev/null`: Alle Daten, die an `/dev/null` gesendet werden, gehen verloren – es wird nichts gespeichert. Der Schreibvorgang meldet dabei trotzdem Erfolg zurück.
+
+Lesen von `/dev/null`: Liefert sofort ein `EOF` (End of File), also keine Daten. Es gibt schlicht nichts zu lesen.
+
+#### Typische Anwendungsfälle:
+
+**Ausgaben unterdrücken**
+
+```bash
+   command > /dev/null
+```
+
+Unterdrückt die Standardausgabe (`stdout`) eines Befehls.
+
+**Fehlermeldungen verwerfen**
+
+```bash
+   command 2> /dev/null
+```
+
+Leitet nur die Fehlerausgabe (`stderr`) ins Leere.
+
+**Komplett stumm schalten**
+
+```bash
+   command > /dev/null 2>&1
+```
+
+Sowohl stdout als auch stderr werden verworfen.
+
+**Leere Eingabe erzeugen**
+
+```bash
+   command < /dev/null
+```
+
+Nützlich, wenn ein Programm eine Eingabe erwartet, aber keine benötigt wird (z. B. um interaktive Prompts zu vermeiden).
+
+**Dateien leeren, ohne sie zu löschen**
+
+```bash
+   cat /dev/null > datei.log
+```
+
+Setzt den Inhalt einer Datei auf null Byte zurück, behält aber die Datei (inkl. Rechten) bei.
+
+#### Wichtige Eigenschaften:
+
+- Gehört zur Kategorie der Character Devices (siehe `ls -l /dev/null` -> beginnt mit `c`).
+- Hat üblicherweise die Major/Minor-Nummer 1, 3.
+- Existiert auch als Konzept unter Windows (NUL) und macOS (ebenfalls `/dev/null`).
+- Belegt keinen Speicherplatz, unabhängig davon, wie viele Daten hineingeschrieben werden.
+
+## Kommandopipelines
+
+Kommandopipelines sind ein mächtiges Werkzeug, mit dem sich erst die ganze Stärke der Kommandozeile nutzen lässt.
+
+Syntax:
+```bash
+<kommando1> | <kommando2>
+```
+
+Mit der *Pipe* (`|`) wird `stdout` von `<kommando1>` mit `stdin` von `<kommando2>` verbunden, so dass `<kommando2>` die Ausgabe von `<kommando1>` entgegenehmen und weiterverarbeiten kann.
+
+Wir können durchaus mehrere Kommandos mit Pipes verbinden, sog. *Pipelines*. Die Anzahl ist einzig durch Hardware-Resourcen beschränkt.
+
+```bash
+<kommando1> | <kommando2> | <kommando3> | <kommando4> | <kommando5> ...
+```
+
+### Beispiele:
+**Konzept der UNIX Philosophie und Nutzung der Pipe**
+
+`ls` kann super gut den Inhalt von Verzeichnissen anzeigen, bei grösseren Verzeichnissen müssen wir aber (falls überhaupt möglich) die Maus nutzen, um den Anfang der Ausgabe sehen zu können. 
+
+Wir leiten die Ausgabe also an den *Pager* `less` weiter, der super gut darin ist, Textströme seitenweise anzuzeigen, darin zu scrollen, zu suchen usw.
+```bash
+ls -l /etc/ | less       # der Output von ls -l wird an den Pager less geleitet
+```
+
+**Nur die Usernamen der realen Benutzer anzeigen lassen**
+
+Wir filtern die Datei `/etc/passwd` zuerst nach den Zeilen mit den Usern, die eine Shell (`/bin/bash`, `/bin/sh`, `/bin/zsh` o.ä.) zugewiesen haben. Anschliessend nutzen wir `cut`, um uns nur das erste Feld mit den Usernamen ausgeben zu lassen.
+
+Das Dollarzeichen `$` ist eil eines *regulären Ausdrucks* und steht für das Ende einer Zeile (mehr dazu z.B. in der Manpage von `grep` oder unter `man regex`).
+```bash
+grep "sh$" /etc/passwd | cut -d: -f1
+```
+**Anzahl der realen User ausgeben lassen**
+```bash
+grep "sh$" /etc/passwd | cut -d: -f1 | wc -l
+```
+
+> [!NOTE]
+> Pipelines bauen wir am besten Stück für Stück auf, wie in einem Baukastensystem. Wir untersuchen die Ausgabe eines Kommandos, nutzen die History um das Kommando erneut aufzurufen, hängen eine Pipe dran, lassen uns das Ergebnis anzeigen, nutzen die History, hängen die nächste Pipe dran usw.
 
 
 
