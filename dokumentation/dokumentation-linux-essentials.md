@@ -764,7 +764,7 @@ ls -l /etc/ | less       # der Output von ls -l wird an den Pager less geleitet
 
 Wir filtern die Datei `/etc/passwd` zuerst nach den Zeilen mit den Usern, die eine Shell (`/bin/bash`, `/bin/sh`, `/bin/zsh` o.ä.) zugewiesen haben. Anschliessend nutzen wir `cut`, um uns nur das erste Feld mit den Usernamen ausgeben zu lassen.
 
-Das Dollarzeichen `$` ist eil eines *regulären Ausdrucks* und steht für das Ende einer Zeile (mehr dazu z.B. in der Manpage von `grep` oder unter `man regex`).
+Das Dollarzeichen `$` ist Teil eines *regulären Ausdrucks* und steht für das Ende einer Zeile (mehr dazu z.B. in der Manpage von `grep` oder unter `man regex`).
 ```bash
 grep "sh$" /etc/passwd | cut -d: -f1
 ```
@@ -776,11 +776,73 @@ grep "sh$" /etc/passwd | cut -d: -f1 | wc -l
 > [!NOTE]
 > Pipelines bauen wir am besten Stück für Stück auf, wie in einem Baukastensystem. Wir untersuchen die Ausgabe eines Kommandos, nutzen die History um das Kommando erneut aufzurufen, hängen eine Pipe dran, lassen uns das Ergebnis anzeigen, nutzen die History, hängen die nächste Pipe dran usw.
 
+## Prozesse
 
+Ein Prozess ist ein gestartetes und sich in der Auführung befindliches Programm. Ein Programm resultiert immer in mindestens einem Prozess. Prozesse laufen jeweils in einem von anderen unabhängigen "Resourcenraum", haben eine eigene PID, kennen ausschliesslich die  PPID (Parent Process ID), also die ID des Prozesses, von dem sie gestartet wurden (Elternprozess). Ansonsten wissen Prozessen nicht mehr voneinander. Prozesse sind hierarchisch organisiert. Prozesse können mit dem Kommando `kill` über Signale beeinflusst werden.
 
+### Vorder- und Hintergrundprozesse
 
+Auf der Shell kann immer nur ein einzelner Prozess im Vordergrund ausgeführt werden, die Shell wird für den Zeitraum der Ausführung *blockiert*, kann also keine anderen Kommandos verarbeiten. Prozesse können mit der Tastenkombination `STRG+Z` angehalten und in den Hintergrund geschickt werden. Mit dem Kommando `bg` kann dieser Prozess dann im Hintergrund fortgesetzt werden, `fg` holt den Prozess in den Vordergrund zurück.
 
+Wir können einen Prozess beim Start aber auch direkt in den Hintergrund schicken und starten (durch Anhängen eines `&`):
+```bash
+ kommando &
+ sleep 200 &
+```
 
+### Die Kommandos `ps`, `jobs`, `fg` und `bg`
+
+Wir können uns mit `ps` generell Prozesse anzeigen lassen, egal ob sie sich im Vorder- oder Hintergrund befinden, angehalten sind oder laufen, mit den passenden Optionen auch sämtliche laufenden Prozesse des Systems. 
+
+Mit `jobs` hingegen lassen sich nur die **Hintergrundprozesse** der aktuellen Shell anzeigen.
+
+Ein z.B. mit der Tastenkombination angehaltener und in den Hintergrund verschobener Prozess kann mit `bg` im Hintergrund fortgesetzt werden.
+
+Mit `fg` lässt sich ein Hintergrundprozess (Job) wieder in den Vordergrund holen (und starten falls angehalten).
+
+- `ps` : Anzeige aller im aktuellen Terminal laufenden Prozesse
+  - `ps -aux`: Anzeige aller laufende Prozessez auf dem System
+  - `ps aux`: Anzeige aller laufende Prozessez auf dem System
+  - `ps -ef`: auch Anzeige aller laufenden Prozesse auf dem System
+  - `ps --forest`: Prozesshirarchie (Baumstruktur) anzeigen
+- `jobs`: Anzeigen der Hintergrundprozesse
+- `fg`: letzten/aktuellen/default Job in den Vordergrund holen
+  - `fg %<jobnummer>`: Job mit Jobnummer `<jobnummer>` in den Vordergrund holen
+- `bg`: Hintergrundprozess fortsetzen
+  - `bg %<jobnummer>`: Hintergrundprozess mit Jobnummer `<jobnummer>` in fortsetzen
+
+#### Ausgabe von `ps` anpassen
+
+Mit der Option `-o` (*output*) können wir festlegen, welche Informationen `ps` anzeigen soll.
+
+```bash
+ps -o pid,ppid,user,stat,cmd
+```
+
+Beispiele für Ausgabefelder:
+
+- `pid`: Prozess-ID
+- `ppid`: Prozess-ID des Elternprozesses
+- `user`: Besitzer des Prozesses
+- `stat`: aktueller Prozessstatus
+- `%cpu`: CPU-Auslastung
+- `%mem`: Arbeitsspeichernutzung
+- `etime`: bisherige Laufzeit
+- `cmd`: Kommando inklusive Argumenten
+
+Mit `-e` werden alle Prozesse berücksichtigt, nicht nur die des aktuellen Terminals:
+
+```bash
+ps -eo pid,ppid,user,%cpu,%mem,etime,cmd
+```
+
+Die Ausgabe kann zusätzlich sortiert werden:
+
+```bash
+ps -eo pid,user,%cpu,%mem,cmd --sort=-%cpu
+```
+
+Das Minuszeichen vor `%cpu` bewirkt eine absteigende Sortierung.
 
 
 
