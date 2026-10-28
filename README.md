@@ -2,26 +2,27 @@
 
 In diesem Repo werden alle Übungen und die Dokumentation zum Kurs *LF-ZQ7B Linux Essentials* (19.10.2026-06.11.2026) bereitgestellt.
 
-## Überblick über die Lernziele für das Linux Essentials Zertifikat
+## Überblick über die Lernziele für das Linux Essentials Zertifikat (Version 1.6)
 
 - [ ] 6.1	Topic 1: The Linux Community and a Career in Open Source
   - [ ] 6.1.1	1.1 Linux Evolution and Popular Operating Systems (weight: 2)
   - [ ] 6.1.2	1.2 Major Open Source Applications (weight: 2)
   - [ ] 6.1.3	1.3 Open Source Software and Licensing (weight: 1)
   - [ ] 6.1.4	1.4 ICT Skills and Working in Linux (weight: 2)
-- [ ] 6.2	Topic 2: Finding Your Way on a Linux System
-  - [ ] 6.2.1	2.1 Command Line Basics (weight: 3)
-  - [ ] 6.2.2	2.2 Using the Command Line to Get Help (weight: 2)
-    - [ ] locate
-  - [ ] 6.2.3	2.3 Using Directories and Listing Files (weight: 2)
-  - [ ] 6.2.4	2.4 Creating, Moving and Deleting Files (weight: 2)
+- [x] 6.2	Topic 2: Finding Your Way on a Linux System
+  - [x] 6.2.1	2.1 Command Line Basics (weight: 3)
+    - [x] history
+  - [x] 6.2.2	2.2 Using the Command Line to Get Help (weight: 2)
+    - [x] locate
+  - [x] 6.2.3	2.3 Using Directories and Listing Files (weight: 2)
+  - [x] 6.2.4	2.4 Creating, Moving and Deleting Files (weight: 2)
 - [ ] 6.3	Topic 3: The Power of the Command Line
   - [ ] 6.3.1	3.1 Archiving Files on the Command Line (weight: 2)
-  - [ ] 6.3.2	3.2 Searching and Extracting Data from Files (weight: 3)
-    - [ ] Redirects
-    - [ ] Pipes
-    - [ ] Filterkommandos
-    - [ ] RegEx
+  - [x] 6.3.2	3.2 Searching and Extracting Data from Files (weight: 3)
+    - [x] Redirects
+    - [x] Pipes
+    - [x] Filterkommandos
+    - [x] RegEx
   - [ ] 6.3.3	3.3 Turning Commands into a Script (weight: 4)
 - [ ] 6.4	Topic 4: The Linux Operating System
   - [ ] 6.4.1	4.1 Choosing an Operating System (weight: 1)
