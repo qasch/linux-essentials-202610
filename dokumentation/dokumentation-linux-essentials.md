@@ -844,11 +844,104 @@ ps -eo pid,user,%cpu,%mem,cmd --sort=-%cpu
 
 Das Minuszeichen vor `%cpu` bewirkt eine absteigende Sortierung.
 
+### kill
 
+ `kill` sendet, anders als der Name vermuten lässt, Signale an Prozesse. Es muss die PID des Prozesses angegeben werden, die Angabe des Prozessnamens funktioniert nicht.
 
+ - `kill -s <signal> <PID>`: sendet <signal> an den Prozess mit der PID <PID>
+ - `kill --signal <signal> <PID>`: sendet <signal> an Prozess mit der PID <PID>
+ - `kill -<signal> <PID>`: sendet <signal> an Prozess mit der PID <PID>
 
+`<signal>` kann sowohl die Signalnummer, als auch der Signalname, sowohl in der Form mit vorangestellten `SIG` als auch ohne sein. Es gibt also insgesamt neun Varianten zur Angabe.
 
+ Die PID eines Prozesses kann auf mehrere Arten ermittelt werden:
+```bash
+ps -ef | grep <prozessname>
+pgrep <prozessname>
+```
 
+### einige wichtige Signale
 
+- `SIGTERM` (15): Standard, falls kein bestimmtes Signal angegeben wird. Sendet eine "freundliche" Aufforderung an den Prozess, sich doch bitte zu beenden. Im Prozess selbst ist festgelegt, wie er auf das Signal reagiert, z.B. werden noch gewisse Aufräumarbeiten durchgeführt etc.
+- `SIGINT` (2): sendet eine deutlichere Aufforderung an den Prozess, sich zu beenden, wird bei der Tastenkomnination `STRG+C` (_Cancel_) gesendet
+- `SIGKILL` (9): rabiateste Methode, Signal wird nicht an den Prozess, sondern direkt an den Kernel/Scheduler gesendet, der daraufhin den entsprechenden Prozess aus seiner Liste löscht, der Prozess somit keine CPU Zeit mehr zur Verfügung gestellt bekommt und zwangsläufig beendet wird.
+- `SIGCONT` (18): führt angehaltene Prozesse fort
+- `SIGSTOP` (19): hält Prozess an und schickt ihn in den Hintergrund, kann aber nicht vom Prozess abgefangen werden, geht direkt an den Kernel
+- `SIGTSTP` (20): hält Prozess an und schickt ihn in den Hintergrund (`STRG+Z`), kann vom Prozess abgefangen werden
+- `SIGHUP` (1): Das *Hangup*-Signal wurde ursprünglich gesendet, wenn eine Terminalverbindung getrennt wurde. Beim Schließen einer Shell oder beim Abbruch einer SSH-Verbindung können davon abhängige Prozesse dieses Signal erhalten und sich daraufhin beenden. Ein Prozess kann `SIGHUP` abfangen oder ignorieren. Viele Daemons verwenden es außerdem als Aufforderung, ihre Konfiguration neu einzulesen, ohne vollständig neu gestartet zu werden.
+
+>[!NOTE]
+> Das Neuladen der Konfiguration ist eine Konvention einiger Programme und nicht die allgemeine Bedeutung von `SIGHUP`.
+
+### Prozessabhängigkeiten bzw. Terminal-unabhängige Ausführung
+
+Jeder Prozess existiert in einer hierarchischen Struktur. Jeder Prozess (außer dem Init-Prozess mit PID 1) hat einen Elternprozess, der ihn erzeugt hat.
+
+Führen wir einen Prozess in einem Terminal aus, wird die Shell zum Elternprozess des neuen Prozesses. Schliessen wir die Shell, senden das System ein `SIGHUP` an alle Prozesse, die mit dieser Shell verbunden sind, was diese (normlaerweise) beendet.
+
+Gerade wenn wir über SSH arbeiten und langwierige Prozesse wie z.B. ein Systemupgrade oder ähnliches durchführen, birgt das natürlich eine gewisse Gefahr.
+
+Es gibt jedoch mehrere Möglichkeiten, Prozesse weiterlaufen zu lassen, obwohl die Elternshell beendet wird.
+
+#### nohup
+
+- Ignoriert das SIGHUP-Signal
+- Leitet STDOUT und STDERR standardmäßig in die Datei `nohup.out` um
+- Der Prozess läuft weiter, auch wenn das Terminal geschlossen wird
+
+```bash
+# Einfache Ausführung
+nohup ./mein-script.sh &
+
+# Mit eigener Ausgabedatei
+nohup ./langläufiger-prozess.sh > prozess.log 2>&1 &
+```
+
+#### disown
+
+`disown` ist ein Shell-Builtin, das einen Job (Hintergrundprozess) aus der Job-Tabelle der Shell entfernt. So wird verhindert, dass ein `SIGHUP` beim Beenden der Shell an den Prozess gesendet wird.
+
+```bash
+# Prozess im Hintergrund starten
+./mein-script.sh &
+
+# Aktuellen Hintergrund-Job disownen
+disown
+
+# Spezifischen Job disownen
+disown %1
+
+# Alle Hintergrund-Jobs disownen
+disown -a
+
+# Mit laufendem Prozess: Prozess stoppen, dann disownen
+# Ctrl+Z (stoppt Prozess)
+bg          # Prozess im Hintergrund fortsetzen
+disown      # Prozess von Shell trennen
+```
+
+### Terminal-Multiplexer
+
+Terminal-Multiplexer sind Tools, die mehrere virtuelle Terminal-Sessions innerhalb eines einzigen physischen Terminals verwalten können.
+
+So können wir in einem Terminal z.B. mehrere "Fenster" mit unterschiedlichen Shells öffnen, diese in einem Layout organisieren (Split-Screen), Sessions speichern und wiederherstellen usw.
+
+Wir können uns von einer Session trennen (*detach*) und zu einem späteren Zeitpunkt wieder verbinden (*attach*). Auch so können Prozesse unabhängig von der Shell ausgeführt werden.
+
+Es ist auch möglich, eine Session zwischen mehreren Benutzern zu teilen, um so z.B. gemeinsam auf einem System oder sogar in einer Shell zu arbeiten.
+
+Es gibt mehrere Terminal-Multiplexer, z.B.:
+
+- `screen` ist der älteste Vertreter, Konfiguration etwas unkomfortabel
+- `tmux` ist der modernere Nachfolger von `screen` mit verbesserter Architektur und Funktionsumfang und Konfigurationsmöglichkeiten
+- `zellij` ist ein der modernste Terminal-Multiplexer, in Rust geschrieben und auf Benutzerfreundlichkeit optimiert (besseres UI, Floating Panes etc.)
+
+### pgrep
+
+Gibt anhand des übergebenen Patterns die dazu passenden PIDs aus.
+
+### pkill
+
+Nimmt im Gegensatz zu `kill` ein Pattern und keine PID entgegen, sendet Signale an **alle** Prozesse, auf die das Patterns passt. `pkill` kann praktisch sein, ist aber auch mit Vorsicht anzuwenden.
 
 
