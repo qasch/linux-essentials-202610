@@ -944,4 +944,227 @@ Gibt anhand des übergebenen Patterns die dazu passenden PIDs aus.
 
 Nimmt im Gegensatz zu `kill` ein Pattern und keine PID entgegen, sendet Signale an **alle** Prozesse, auf die das Patterns passt. `pkill` kann praktisch sein, ist aber auch mit Vorsicht anzuwenden.
 
+## Verzeichnisstruktur / FHS
+
+| Verzeichnis | Bedeutung | enthält |
+| ----------- |:-------------: | --------- |
+| `/bin` | *binary* |  ausführbare Dateien, die von allen Benutzern ausgeführt werden können. Normalerweise ein *Symlink* auf `/usr/bin`. |
+| `/sbin` | *superuser binary* |  auch ausführbare Dateien, die allerdings nur von `root` genutzt werden können. Auch ein Symlink auf `/usr/sbin`. |
+| `/boot` | |  den/die Linux Kernel (`vmlinuz-6.1.0-25.amd64`), die zugehörige Initiale RAM Disk (`initrd.img-6.1.0-25-amd64`), weitere für den Bootvorgang wichtige Dateien und die Konfiguration des Bootloaders, z.B. `grub`. |
+| `/dev` | *devices* |  *Gerätedateien*, z.B. für die vorhanden Speichermedien und Partitionen, `/dev/null`, `/dev/random`, die Filedescriptoren `stdin`, `stdout`, `stderr`, Terminals etc. Dieses Verzeichnis wird automatisch vom Dienst `udev` (*Userspace Dev*) überwacht und gepflegt. |
+| `/etc` | *et cetera* / *etsy* |  systemweite Konfigurationsdateien. Diese können für gewisse Programme durch die benutzerspezifischen Konfigurationsdateien (im Heimatverzeichnis der Benutzer) überschrieben werden (`/etc/bash.bashrc` -> `~/.bashrc`). |
+| `/home` | | Heimatverzeichnisse der regulären Benutzer |
+| `/media` `/mnt` | *mount* |  Verzeichnisse für die *Mountpoints* weiterer/externer Datenträger |
+| `/opt` | *optional* | hier können Pakete ihre Dateien ablegen, die nicht über die Standardpaketquellen installiert wurden |
+| `/proc` | *processes* |  Dateien/Informationen über das laufende System: laufende Prozesse, Hardware, Kernelkonfiguration. Existiert nur im RAM, ist ein sog. *virtuelles* oder *Pseudodateisystem* |
+| `/root` | | Heimatverzeichnis des *Superusers* `root` |
+| `/sys` | *system* | ähnlich wie `/proc` bzw. eine nachträgliche Erweiterung,  vor allem Dateien/Informationen zur Hardware, auch ein *virtuelles-* bzw. *Pseudodateisystem*. |
+| `/tmp` | *temp* |  temporäre Dateien |
+| `/usr` | *Unix System Resources* |  Verzeichnisse für die ausführbaren Dateien, Libraries, Source Code, Dokumentationen etc. |
+| `/var` | *variable* |  viele wichtige Dateien wie z.B. *Logdateien* (`/var/log`), E-Mails (`/var/mail`), Cache (`/var/cache`) ... |
+
+
+TODO: Logging / dmesg / 
+
+## Dateien finden
+
+### locate
+
+Durchsucht das Dateisystem nach einem *Pattern* bzw. Suchbegriff.
+
+`locate` ist sehr schnell, denn es durchsucht eine Datenbank (also eine Art Index/Glossar), die Suche ist so deutlich schneller möglich, als wenn jede Datei einzeln angeschaut werden müsste.
+
+Die Datenbank wird vom System über einen sog. `cronjob`/*Systemd Timer* automatisch periodisch erneuert.
+
+Manuell können wir die Datenbank mit dem Kommando `updatedb` aktualisieren. Dafür sind `root` Rechte nötig.
+
+`locate` hat einige Optionen, die wichtigsten davon sind vielleicht:
+
+- `-i` (*ignore-case*),
+- `-e` auch ohne die Aktualisierung der Datenbank werden nur existierende Dateien angezeigt. 
+- `-r` so können wir `locate` einen Regulären Ausdruck zur Suche übergeben. Hier ist die Optionn `-R` auch noch interessant, um den verwendeten RegEx Dialekt anzugeben
+
+Es kann sehr sinnvoll sein, die Ergebnisse von `locate` nachträglich mit Tools wie z.B. `grep` zu filtern
+
+### find
+
+#### Grundlegende Syntax
+```bash
+find [Pfad] [Optionen] [Aktionen]
+```
+
+Das `find`-Kommando durchsucht Verzeichnisbäume nach Dateien und Verzeichnissen, die bestimmte Kriterien erfüllen.
+
+Das Kommando `find` ohne Argumente liefert eine (rekursive) Liste aller Dateien und Verzeichnisse im aktuellen Verzeichnis.
+
+Das erste Argument was wir `find` übergeben (müssen) ist das Startverzeichnis für die Suche.
+
+```bash
+# Alle Dateien im aktuellen Verzeichnis und Unterverzeichnissen
+find
+find .
+
+# Alle Dateien in /home
+find /home
+```
+
+Die Suche lässt sich nach vielen Kriterien verfeinern. In der Manpage von `find` wird von *Tests* gesprochen (-> Suche nach `TESTS`). Wir testen also alle Dateien, ob sie bestimmten Kriterien genügen.
+
+Der Test `-name` (**ein** Minuszeichen, nicht zwei) sucht z.B. nach Dateinamen. Wildcards werden akzeptiert, wir müssen nur darauf achten, dass die Shell das `*` nicht als Globbing Character interpretiert und es dementsprechend maskieren, so dass es an `find` durchgereicht wird.
+
+#### Suche nach Dateien mit der Endung `.txt`
+```bash
+find . -name "*.txt"
+
+# Case-insensitive Suche
+find . -iname "*.TXT"
+```
+
+#### Suche nach Dateiyyp
+
+| Option | Bedeutung |
+|--------|-----------|
+| `-type f` | Nur Dateien |
+| `-type d` | Nur Verzeichnisse |
+| `-type l` | Nur symbolische Links |
+
+**Beispiele:**
+
+```bash
+# Nur Dateien nach regulären Dateien suchen
+find /var/log -type f
+
+# Nur nach Verzeichnisse suchen
+find . -type d
+
+# Nur nach Symbolischen Links suchen
+find /usr -type l
+```
+
+#### Suche nach Namen
+
+| Option | Bedeutung |
+|--------|-----------|
+| `-name "muster"` | Exakte Übereinstimmung (case-sensitive) |
+| `-iname "muster"` | Case-insensitive |
+| `-path "muster"` | Suche im gesamten Pfad |
+
+**Beispiele:**
+
+```bash
+# Alle .log-Dateien
+find /var/log -name "*.log"
+
+# Case-insensitive
+find . -iname "readme.txt"
+
+# Pfad-Muster
+find . -path "*/config/*.conf"
+```
+
+#### Suche nach Dateigröße
+
+| Option | Bedeutung |
+|--------|-----------|
+| `-size n` | Genau n Blöcke (512 Bytes) |
+| `-size +n` | Größer als n |
+| `-size -n` | Kleiner als n |
+
+**Einheiten:**
+- `c` - Bytes
+- `k` - Kilobytes
+- `M` - Megabytes
+- `G` - Gigabytes
+
+**Beispiele:**
+
+```bash
+# Dateien größer als 100 MB
+find . -size +100M
+
+# Dateien kleiner als 1 KB
+find . -size -1k
+
+# Dateien mit genau 512 Bytes
+find . -size 512c
+
+# Leere Dateien
+find . -size 0
+```
+
+#### Suche nach Zeit
+
+| Option | Bedeutung |
+|--------|-----------|
+| `-mtime n` | Geändert (m -> modified) vor n Tagen |
+| `-mtime +n` | Geändert vor mehr als n Tagen |
+| `-mtime -n` | Geändert in den letzten n Tagen |
+| `-atime n` | Zugegriffen (a -> accessed) vor n Tagen |
+| `-ctime n` | Status geändert (c -> changed) vor n Tagen |
+
+**Minuten statt Tage:**
+- `-mmin` - Änderungszeit in Minuten
+- `-amin` - Zugriffszeit in Minuten
+- `-cmin` - Statusänderung in Minuten
+
+**Beispiele:**
+
+```bash
+# Dateien, die in den letzten 7 Tagen geändert wurden
+find . -mtime -7
+
+# Dateien, die vor mehr als 30 Tagen geändert wurden
+find . -mtime +30
+
+# Dateien, die in den letzten 60 Minuten geändert wurden
+find . -mmin -60
+```
+#### Suche nach Berechtigungen
+
+```bash
+# Dateien mit genau 644
+find . -perm 644
+
+# Dateien mit mindestens 644
+find . -perm -644
+
+# Ausführbare Dateien
+find . -perm /111
+
+# Dateien mit SUID-Bit
+find / -perm -4000
+```
+
+#### Suche nach Eigentümer
+
+```bash
+# Dateien von Benutzer "john"
+find /home -user john
+
+# Dateien von Gruppe "developers"
+find /var -group developers
+```
+
+## Reguläre Ausdrücke
+
+TODO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
