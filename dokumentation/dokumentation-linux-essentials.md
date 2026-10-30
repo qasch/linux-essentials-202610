@@ -301,7 +301,37 @@ mkdir -p projekt/{src,docs,tests}/{de,en}
 
 ## Escaping / Qouting / Maskieren
 
-TODO
+Bestimmte Zeichen haben eine Sonderbedeutung für die BASH. Das wohl wichtigste Sonderzeichen ist das *Leerzeichen*: 
+
+> Das Leerzeichen ist ein Sonderzeichen. Das Leerzeichen ist das **Trennzeichen**. Das Trennzeichen ist elementar wichtig für die Shell, um z.B. ein Kommando von seinen Optionen und Argumenten unterscheiden zu können.
+
+Weitere Sonderzeichen sind:
+```bash
+*       # Asterisk (Globbing)
+?       # Fragezeichen (Globbing)
+#       # Kommentarzeichen
+$       # Subsitution
+!       # History Expansion
+\       # Backslash (Escaping)
+'       # Escaping
+"       # Escaping
+;       # beendet eine Eingabe
+```
+
+Wir haben drei verschiedene Möglichkeiten, Sonderzeichen zu *escapen*. Damit sorgen wir dafür, dass die Shell diese(s) Sonderzeichen nicht als Sonderzeichen behandelt. Wir *schützen* das Zeichen also davor, von der Shell interpretiert zu werden.
+
+- `\` (Backslash) - maskiert das direkt darauf folgenden Zeichen
+- `'` (einfaches Hochkomma) - maskiert alle Sonderzeichen
+- `"` (doppeltes Hochkomma) - maskiert fast alle Sonderzeichen, Ausnahmen:
+  - `$` Dollarzeichen für die Subsitution
+  - `!` für die History Expansion
+  - `\` Backslash vor gewissen Zeichen:
+  ```bash
+  echo "\$"    # $  (escaped)
+  echo "\`"    # `  (escaped)
+  echo "\""    # "  (escaped)
+  echo "\\"    # \  (escaped)
+  ```
 
 ## Aliase
 
@@ -1147,9 +1177,401 @@ find /var -group developers
 
 ## Reguläre Ausdrücke
 
-TODO
+Reguläre Ausdrücke (engl. *Regular Expressions*, kurz *Regex* oder *RegEx*) sind Zeichenketten, die ein Suchmuster beschreiben. Sie werden verwendet, um Text zu durchsuchen, zu validieren oder zu ersetzen. Regex ist in vielen Programmiersprachen und Tools verfügbar.
 
+### 2. Grundlegende Syntax
 
+#### Literale Zeichen
+
+Die meisten Zeichen matchen sich selbst. Das Muster `cat` findet die Zeichenfolge `"cat"` im Text.
+
+#### Metazeichen
+
+Spezielle Zeichen mit besonderer Bedeutung:
+
+| Zeichen | Bedeutung |
+|---------|-----------|
+| `.` | Beliebiges einzelnes Zeichen (außer Zeilenumbruch) |
+| `^` | Anfang der Zeile |
+| `$` | Ende der Zeile |
+| `*` | 0 oder mehr Wiederholungen |
+| `+` | 1 oder mehr Wiederholungen |
+| `?` | 0 oder 1 Wiederholung (optional) |
+| `\|` | Oder (Alternative) |
+| `\` | Escape-Zeichen (für Metazeichen) |
+
+### 3. Zeichenklassen
+
+Zeichenklassen ermöglichen das Matchen von Zeichen aus einer bestimmten Menge.
+
+| Muster | Bedeutung |
+|--------|-----------|
+| `[abc]` | Eines der Zeichen a, b oder c |
+| `[^abc]` | Alles außer a, b oder c |
+| `[a-z]` | Alle Kleinbuchstaben von a bis z |
+| `[A-Z]` | Alle Großbuchstaben von A bis Z |
+| `[0-9]` | Alle Ziffern von 0 bis 9 |
+| `\d` | Ziffer (entspricht [0-9]) |
+| `\D` | Keine Ziffer (entspricht [^0-9]) |
+| `\w` | Wortzeichen (a-z, A-Z, 0-9, _) |
+| `\W` | Kein Wortzeichen |
+| `\s` | Whitespace (Leerzeichen, Tab, Zeilenumbruch) |
+| `\S` | Kein Whitespace |
+
+### 4. Quantifizierer
+
+Quantifizierer geben an, wie oft ein Zeichen oder eine Gruppe vorkommen soll.
+
+| Muster | Bedeutung |
+|--------|-----------|
+| `{n}` | Genau n Wiederholungen |
+| `{n,}` | Mindestens n Wiederholungen |
+| `{n,m}` | Zwischen n und m Wiederholungen |
+| `*?` | Nicht-gieriger Match (so wenig wie möglich) |
+| `+?` | Nicht-gieriger Match (so wenig wie möglich) |
+
+### 5. Gruppen und Rückverweise
+
+| Muster | Bedeutung |
+|--------|-----------|
+| `(abc)` | Erfassungsgruppe (speichert Match) |
+| `\1`, `\2` | Rückverweis auf Gruppe 1, 2 usw. |
+
+### 6. Anker und Grenzen
+
+| Muster | Bedeutung |
+|--------|-----------|
+| `\b` | Wortgrenze |
+| `\B` | Keine Wortgrenze |
+
+### 7. Praktische Beispiele
+
+| Aufgabe | Regex |
+|---------|-------|
+| E-Mail-Adresse | `^[\w.-]+@[\w.-]+\.\w{2,}$` |
+| Telefonnummer (DE) | `^\+?49\s?\d{3,4}\s?\d{6,8}$` |
+| URL | `https?://[\w.-]+\.[a-z]{2,}` |
+| Datum (DD.MM.YYYY) | `^(0[1-9]\|[12][0-9]\|3[01])\.(0[1-9]\|1[0-2])\.\d{4}$` |
+| Postleitzahl (DE) | `^\d{5}$` |
+| IP-Adresse (IPv4) | `^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$` |
+| Hexadezimalfarbe | `^#?([A-Fa-f0-9]{6}\|[A-Fa-f0-9]{3})$` |
+
+### 10. Nützliche Links dazu
+
+- **regex101.com** - Interaktiver Regex-Tester mit Erklärungen
+- **regexr.com** - Weiterer Regex-Tester mit Community-Mustern
+- **regexcrossword.com** - Spielerisch Regex lernen
+- **Regular-Expressions.info** - Umfassende Dokumentation
+
+## Linux Distributionen
+
+Eine **Linux-Distribution** ist im Prinzip ein komplettes Betriebssystem, das einen Linux-Kernel und zusätzlich Softwarepakete, Paketverwaltung, Systemdienste und oft eine Desktop-Umgebung beinhaltet.
+
+Eine Distribution kombiniert also:
+
+- **Linux-Kernel**: Herzstück des Systems, das die Hardware initiert und steuert und grundlegende Systemfunktionen bereitstellt.
+- **GNU-Basiswerkzeuge**: Standardprogramme für Dateiverwaltung, Shell, Systemdienste...
+- **Paketverwaltungssystem**: Installieren, Aktualisieren und Entfernen von Software (z. B. `apt`, `dnf`, `pacman`).
+- **Systemdienste**: Netzwerk, Benutzerverwaltung, Logging usw.
+- **Anwendungssoftware**: Browser, Office, Multimedia usw.
+- Optional **Desktop-Umgebung**: z. B. GNOME, KDE, XFCE.
+
+Die verschiedenen Distributionen haben jeweils eigene Paketquellen (*Repositories*) und evtl. auch Tools zur Systemverwaltung.
+
+Sie unterscheiden sich in Zielgruppe, Philosophie, Stabilität, Update-Zyklus, Standardsoftware...
+
+### Beispiele für Distributionen
+
+- **Debian** → stabil, Fokus auf FLOSS (*Free Libre Open Source Software*), oft als Server Betriebssytem eingesetzt
+- **Ubuntu** (basiert auf Debian unstable / sid ) →  benutzerfreundlich, Desktop und Server
+- **Red Hat Enterprise Linux (RHEL)** →  kommerziell, Unternehmensumgebungen (Server und Desktop), Firmen zahlen für Support
+- **Fedora** →  von Red Hat, kostenlos, aktuellste Software, Entwicklerorientiert, eher Desktop
+- **Arch Linux** →  folgt dem KISS Prinzip, nach Insatllation absolut minimalistisch, Rolling Release, eher für erfahrenere User, Desktop
+- **openSUSE** →  Desktop und Server, YaST als Admin-Tool (grafisches Tool, mit dem sämtliche administrativen Aufgaben erfüllt werden können
+
+### Release-Modelle
+
+- **Fixed Release**:  Stabile Versionen in festen Intervallen. Nur mit einer neuen Version der Distribution kommt auch neue Version von Software. Weniger aktuell, dafür stabiler. (Debian, Ubuntu, RHEL, openSUSE Leap ...)
+- **Rolling Release**: Kontinuierliche Updates, keine festen Versionen, aktuelle Software kommt direkt in die Repos. Sehr aktuell (*Bleeding Edge*), dafür tendentiell weniger stabil. (Arch Linux, openSUSE Tumbleweed ...)
+- **Hybrid**:  Kombination aus stabilen Releases und optionalen Rolling-Komponenten. (Fedora (teils), Manjaro (basiert auf Arch Linux))
+
+### Supportzeitraum und LTS (Long Term Support)
+
+Die einzelnen Versionen der Release basierten Distributionen werden über einen bestimmten Zeitraum hinweg mit Updates versorgt, bis sie ihren EOL (End of Life) erreichen und keine Updates mehr bekommen.
+
+**LTS** steht für *Long Term Support* (Langzeit-Unterstützung). LTS-Versionen bekommen besonders lange Updates (mindestens 5 Jahre) und sind besonders für Unternehmen, Server und Systeme wichtig, die über Jahre stabil laufen sollen, ohne dass man sich um häufige Upgrades (des gesamten Systems) kümmern muss.
+
+Es gibt sogar Versionen von Ubuntu und RHEL, die über mehr als 10 Jahre lang (Sicherheits-)Updates erhalten (*ELS - Extended Lifecycle Support* bzw. *ESM - Extended Security Maintenance*), dann aber auch (teilweise) kostenpflichtig sind.
+
+## Softwareverwaltung / Paketmanager
+
+*APT (Advanced Package Tool)* ist der Standard-Paketmanager für Debian-basierte Linux-Distributionen wie Debian, Ubuntu, Linux Mint etc. APT verwaltet (Installation, Deinstallation etc. ) Softwarepakete, löst Abhängigkeiten (weitere Software die für den Betrieb der zu installierenden Software nötig ist) automatisch auf und hält das System aktuell.
+
+`apt` ist der Nachfolger von `apt-get`. die Subkommandos wie `install`, `update` und `upgrade` sind hier gleich. Unterschiede gibts es z.B. beim Suchen nach Paketen:
+```bash
+apt search
+apt-cache search
+```
+In Skripten wird aufgrund des stabileren CLIs weiterhin die Verwendung von `apt-get` empfohlen, für den täglichen Gebrauch `apt`. Im folgenden wird also nur auf die Syntax von `apt` eingegangen.
+
+### Aktualisierung des gesamten Systems
+
+#### apt update
+
+Aktualisiert die lokale Paketdatenbank mit den neuesten Informationen aus den konfigurierten Paketquellen. Von allen konfigurierten Repositories werden die aktuellen Paketlisten heruntergeladen und mit den lokal vorhandenen abgeglichen. So können Pakete identifiziert werden, die aktualisiert werden können/sollten.
+
+#### apt upgrade
+
+Aktualisiert **sämtliche** über die Paketverwaltung installierten Pakete auf dem System. Dabei werden jedoch keine neuen Pakete installiert oder vorhandene (Abhängigkeiten) entfernt
+
+#### apt full-upgrade
+
+Wie `apt upgrade`, allerdings werden bei Bedarf Abhängigkeiten zusätlich installiert oder entfernt. Ersetzt `apt dist-upgrade` (wird aber auch noch unterstützt).
+
+##### Abhängigkeiten / Dependencies
+
+Damit bestimmte Software überhaupt lauffähig ist, wird oft weitere Software (z.B. Libraries) benötigt. `apt` erkennt diese Abhängigkeiten/Dependencies und löst sie automatisch auf, d.h. dieses Software wird automatisch mit installiert.
+
+### Installation 
+
+#### apt install
+
+```bash
+apt install <paket>
+apt install <paket1> <paket2> <paket3>
+```
+
+Installiert Pakete bzw. aktualisiert gezielt einzelne Pakete.
+
+### Deinstallation
+
+#### apt remove 
+```bash
+apt remove <paket>
+apt remove <paket1> <paket2> <paket3>
+```
+Entfernt Pakete, behält aber deren Konfigdateien auf dem System. Eventuell während der Insatllation des Pakets automatisch mitinstallierten Abhängigkeiten/Dependencies werden ebenfalls **nicht** mit entfernt.
+
+#### apt purge
+#### apt remove --purge
+```bash
+apt purge <paket>
+apt remove --purge <paket>
+```
+
+Entfernt Pakete und zusätzlich deren Konfiguratoinsdateien. 
+
+Dass die Konfiguratoinsdateien standardmässig auf dem System verbleiben ist gewollt. So ist es möglich, ein Paket zu entfernen und zu einem späteren Zeitpunkt neu zu installieren ohne seine Konfiguration zu verlieren. 
+
+Möchte man aber mit einem Paket "sauber und neu" anfangen, könnte man es inklusive seiner Konfiguratoinsdateien löschen und so mit einer frischen Installation starten.
+
+#### apt autoremove 
+
+Entfernt **automatisch installierte** Abhängigkeiten, die nicht mehr benötigt werden.
+
+Eventuell vorhanden Konfiguratoinsdateien bleiben erhalten.
+
+#### apt autopurge
+#### apt autoremove --purge
+
+Entfernt automatisch installierte Abhängigkeiten, die nicht mehr benötigt werden.
+
+Eventuell vorhanden Konfiguratoinsdateien werden mit entfernt.
+
+Ist in der Regel sicher in der Ausführung, trotzdem sollten wir uns (generell) immer die Liste der zu installierenden bzw. vor allem auch zu entfernenden Pakete gut anschauen.
+
+### Suche nach Paketen
+
+#### apt search
+```bash
+apt search <suchbegriff>
+```
+
+Durchsucht die Namen und Beschreibungen der Pakete nach `<suchbegriff>`. 
+
+Wir brauchen in der Regel jedoch Kenntnis über den Namen des Pakets für ein bestimmtes Kommando/Dienst etc. Die Suche ist zugegebenermassen nicht besonders komfortabel. Es gibt Hilfsmittel wie z.B. `apt-file`, mit welchem wir den Namen des Pakets finden können, in dem sich ein bestimmtes Kommando befindet. Ansonsten ist hier eine kurze Recherche nach dem Paketnamen durchaus sinnvoll.
+
+### Informationen über Pakete
+```bash
+apt show <paketname>
+```
+
+Zeigt ausführliche Informationen zu einem Paket an, wie:
+
+- Paketname und Version
+- Beschreibung
+- Abhängigkeiten
+- Größe
+- Maintainer
+- Homepage
+- etc.
+
+#### Alternativen
+
+- `aptitude` -> interaktiv, Pakete sind in Gruppen sortiert, ist ein Frontend für `apt`
+- muss manuell nachinstalliert werden
+
+### sources.list
+
+>[!NOTE]
+> Aufbau und Syntax gelten für ältere Versionen von Debian. Es gab hier eine Änderung in Debian 13. Das generelle Konzept bleibt aber gleich. 
+
+- enthält Links zu den verwendeten Repositories, bzw. Links zu den Servern von denen wir Pakete herunterladen
+- der Versionsname gibt die aktuell verwendete Version an
+
+#### Syntax
+
+```
+deb [optionen] url distribution komponenten
+deb-src [optionen] url distribution komponenten
+```
+
+**Beispiel:**
+```
+deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
+```
+
+**Erklärung:**
+
+- `deb`: Binärpakete (kompilierte Software)
+- `deb-src`: Quellcode-Pakete
+- `url`: Mirror-Server
+- `distribution`: Debian-Version (z.B. bookworm, bullseye)
+- `komponenten`: Paketgruppen (main, contrib, non-free)
+
+#### Komponenten
+
+- **main:** Freie Software, die den Debian-Richtlinien entspricht
+- **contrib:** Freie Software mit Abhängigkeiten zu nicht-freier Software
+- **non-free:** Proprietäre Software
+- **non-free-firmware:** Proprietäre Firmware (ab Debian 12)
+
+#### Repository hinzufügen
+
+```bash
+# Manuell zur sources.list hinzufügen
+echo "deb http://example.com/debian stable main" | sudo tee -a /etc/apt/sources.list
+
+# Oder in separater Datei
+echo "deb http://example.com/debian stable main" | sudo tee /etc/apt/sources.list.d/example.list
+
+# PPA hinzufügen (Ubuntu)
+sudo add-apt-repository ppa:user/repository
+```
+
+Nach dem Bearbeiten der `sources.list` muss immer ein `apt update` durchgeführt werden, um die neuen Paketlisten zu laden.
+
+### Debian-Zweige: Stable, Testing, Sid
+
+Debian bietet verschiedene Entwicklungszweige mit unterschiedlichen Stabilitäts- und Aktualitätsgraden.
+
+#### Stable (z.B. bookworm)
+
+```
+deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
+```
+
+**Eigenschaften:**
+
+- **Stabilität:** Sehr hoch
+- **Sicherheitsupdates:** Regelmäßig und zuverlässig
+- **Neue Features:** Selten
+- **Release-Zyklus:** Alle 2-3 Jahre
+- **Empfohlen für:** Produktionsserver, kritische Systeme
+
+**Vorteile:**
+
+- Zuverlässig und gut getestet
+- Vorhersehbares Verhalten
+- Lange Support-Zeiträume
+
+**Nachteile:**
+
+- Ältere Software-Versionen
+- Neue Features kommen spät
+
+#### Testing (z.B.: Trixie)
+
+```
+deb http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+```
+
+**Eigenschaften:**
+
+- **Stabilität:** Mittel bis hoch
+- **Sicherheitsupdates:** Mit Verzögerung
+- **Neue Features:** Regelmäßig
+- **Rolling Release:** Kontinuierliche Updates
+- **Empfohlen für:** Desktop-Systeme, Entwickler
+
+**Vorteile:**
+
+- Aktuellere Software als Stable
+- Meist stabil genug für den täglichen Gebrauch
+- Wird zum nächsten Stable
+
+**Nachteile:**
+
+- Gelegentliche Instabilitäten
+- Sicherheitsupdates nicht so schnell wie bei Stable
+- Kann während des Freezes veralten
+
+### Sid (Unstable)
+
+```
+deb http://deb.debian.org/debian/ sid main contrib non-free non-free-firmware
+```
+
+**Eigenschaften:**
+
+- **Stabilität:** Niedrig bis mittel
+- **Sicherheitsupdates:** Keine garantiert
+- **Neue Features:** Sofort
+- **Rolling Release:** Permanente Updates
+- **Empfohlen für:** Entwickler, Tester, Erfahrene Nutzer
+
+**Vorteile:**
+
+- Neueste Software-Versionen
+- Bleeding-edge Features
+- Hilft Debian-Entwicklung
+
+**Nachteile:**
+
+- Kann jederzeit kaputt gehen
+- Keine Sicherheits-Garantien
+- Erfordert aktive Wartung
+- Nicht für Produktivumgebungen
+
+### Zweige wechseln / Upgrade
+
+Um ein Upgrade von einer Debian Version auf eine andere durchzuführen sind prinzipiell folgenden Schritte nötig:
+
+```bash
+# Backup erstellen
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+
+# sources.list bearbeiten und Zweig ändern
+sudo nano /etc/apt/sources.list
+# Hier den bisherigen Versionnamen (z.B. bookworm) durch den neuen (z.B. trixie) ersetzen
+
+# System aktualisieren
+sudo apt update
+sudo apt full-upgrade
+
+# Eventuell verwaiste Pakete entfernen
+sudo apt autoremove
+sudo apt clean
+```
+
+**Achtung:** Dies ist eine vereinfachte Darstellung des Prozesses, der so zwar funktionert aber gewisse Besonderheiten/Vorsichtsmassnahmen ausser acht lässt.
+
+## Archivierung und Komprimierung
+
+*Archivierung* bezeichnet das Zusammenfassen **mehrerer** Dateien und Verzeichnisse in eine **einzige** Datei, ohne zwingende Kompression. Dadurch bleibt die ursprüngliche Struktur der Dateien erhalten (Rechte, Besitzverhältnisse, Grösse, Zeitstempel, Pfadangaben), so können mehrere Dateien einfacher gespeichert oder übertragen werden.
+
+Unter Linux wird das Kommando `tar` (*Tape Archiver*) zur Archivierung verwendet. `tar` ist ein sehr altes Programm und die Syntax (freundlich ausgedrückt) etwas gewöhnungsbedürftig. Kurzoptionen haben oft keine direkte Entsprechung zu den Langoptionen.
 
 
 
